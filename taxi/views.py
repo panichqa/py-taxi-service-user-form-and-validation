@@ -1,8 +1,9 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.urls import reverse_lazy
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy, reverse
 from django.views import generic
 from django.contrib.auth.mixins import LoginRequiredMixin
+from taxi.forms import DriverLicenseUpdateForm, DriverCreationForm
 
 from .models import Driver, Car, Manufacturer
 
@@ -79,6 +80,22 @@ class CarDeleteView(LoginRequiredMixin, generic.DeleteView):
     success_url = reverse_lazy("taxi:car-list")
 
 
+@login_required
+def add_driver_to_car(request, pk):
+    car = get_object_or_404(Car, pk=pk)
+    driver = request.user
+    car.drivers.add(driver)
+    return redirect(reverse("taxi:car-detail", kwargs={"pk": pk}))
+
+
+@login_required
+def remove_driver_from_car(request, pk):
+    car = get_object_or_404(Car, pk=pk)
+    driver = request.user
+    car.drivers.remove(driver)
+    return redirect(reverse("taxi:car-detail", kwargs={"pk": pk}))
+
+
 class DriverListView(LoginRequiredMixin, generic.ListView):
     model = Driver
     paginate_by = 5
@@ -87,3 +104,32 @@ class DriverListView(LoginRequiredMixin, generic.ListView):
 class DriverDetailView(LoginRequiredMixin, generic.DetailView):
     model = Driver
     queryset = Driver.objects.all().prefetch_related("cars__manufacturer")
+
+
+class DriverCreateView(LoginRequiredMixin, generic.CreateView):
+    model = Driver
+    form_class = DriverCreationForm
+    template_name = "taxi/driver_form.html"
+    success_url = reverse_lazy("taxi:driver-list")
+
+    def form_valid(self, form):
+        form.instance.set_password(form.cleaned_data["password1"])
+        return super().form_valid(form)
+
+
+class DriverDeleteView(LoginRequiredMixin, generic.DeleteView):
+    model = Driver
+    success_url = reverse_lazy("taxi:driver-list")
+
+
+class DriverLicenseUpdateView(LoginRequiredMixin, generic.UpdateView):
+    model = Driver
+    form_class = DriverLicenseUpdateForm
+    template_name = "taxi/driver_license_update_form.html"
+    success_url = reverse_lazy("taxi:driver-detail")
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "taxi:driver-detail",
+            kwargs={"pk": self.object.pk}
+        )
