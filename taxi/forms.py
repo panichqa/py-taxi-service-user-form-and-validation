@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
-from taxi.models import Driver
+from taxi.models import Driver, Car
 
 
 def validate_license_number(license_number):
@@ -45,3 +45,15 @@ class DriverLicenseUpdateForm(forms.ModelForm):
         license_number = self.cleaned_data["license_number"]
         validate_license_number(license_number)
         return license_number
+
+
+class CarCreationForm(forms.ModelForm):
+    class Meta:
+        model = Car
+        fields = ("model", "manufacturer", "drivers")
+
+    drivers = forms.ModelMultipleChoiceField(
+        queryset=Driver.objects.all(),
+        widget=forms.CheckboxSelectMultiple,
+        label="Add Drivers"
+    )
