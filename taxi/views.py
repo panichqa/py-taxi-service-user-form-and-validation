@@ -77,7 +77,6 @@ class CarDetailView(LoginRequiredMixin, generic.DetailView):
         return redirect(reverse("taxi:car-detail", kwargs={"pk": car.pk}))
 
 
-
 class CarCreateView(LoginRequiredMixin, generic.CreateView):
     model = Car
     fields = "__all__"
