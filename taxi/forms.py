@@ -1,24 +1,24 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
+from django.core.validators import RegexValidator
+
 from taxi.models import Driver, Car
 
 
-def validate_license_number(license_number):
-    if len(license_number) != 8:
-        raise forms.ValidationError(
-            "The license number must be 8 characters long."
-        )
-    if not license_number[:3].isalpha() or not license_number[:3].isupper():
-        raise forms.ValidationError(
-            "The first 3 characters must be capital letters."
-        )
-    if not license_number[3:].isdigit():
-        raise forms.ValidationError(
-            "The last 5 characters must be numbers."
-        )
+validate_license_number = RegexValidator(
+    regex=r'^[A-Z]{3}\d{5}$',
+    message="The license number must consist of 3 capital letters followed by 5 numbers."
+)
 
 
-class DriverCreationForm(UserCreationForm):
+class LicenseNumberValidationForm(forms.ModelForm):
+    def clean_license_number(self):
+        license_number = self.cleaned_data["license_number"]
+        validate_license_number(license_number)
+        return license_number
+
+
+class DriverCreationForm(UserCreationForm, LicenseNumberValidationForm):
     class Meta:
         model = Driver
         fields = (
@@ -30,21 +30,11 @@ class DriverCreationForm(UserCreationForm):
             "password2"
         )
 
-    def clean_license_number(self):
-        license_number = self.cleaned_data["license_number"]
-        validate_license_number(license_number)
-        return license_number
 
-
-class DriverLicenseUpdateForm(forms.ModelForm):
+class DriverLicenseUpdateForm(LicenseNumberValidationForm):
     class Meta:
         model = Driver
         fields = ("license_number", )
-
-    def clean_license_number(self):
-        license_number = self.cleaned_data["license_number"]
-        validate_license_number(license_number)
-        return license_number
 
 
 class CarCreationForm(forms.ModelForm):
