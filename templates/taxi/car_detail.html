@@ -15,8 +15,14 @@
   <form method="post">
     {% csrf_token %}
     <input type="hidden" name="car_id" value="{{ car.id }}">
-    <button type="submit" name="action" value="{% if request.user in car.drivers.all %}remove{% else %}add{% endif %}" class="btn {% if request.user in car.drivers.all %}btn-danger{% else %}btn-success{% endif %}">
-      {% if request.user in car.drivers.all %}Remove me from this car{% else %}Assign me to this car{% endif %}
-    </button>
+    {% if request.user in car.drivers.all %}
+      <button type="submit" name="action" value="remove" class="btn btn-danger">
+        Remove me from this car
+      </button>
+    {% else %}
+      <button type="submit" name="action" value="add" class="btn btn-success">
+        Assign me to this car
+      </button>
+    {% endif %}
   </form>
 {% endblock %}

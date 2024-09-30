@@ -12,14 +12,7 @@ validate_license_number = RegexValidator(
 )
 
 
-class LicenseNumberValidationForm(forms.ModelForm):
-    def clean_license_number(self):
-        license_number = self.cleaned_data["license_number"]
-        validate_license_number(license_number)
-        return license_number
-
-
-class DriverCreationForm(UserCreationForm, LicenseNumberValidationForm):
+class DriverCreationForm(UserCreationForm):
     class Meta:
         model = Driver
         fields = (
@@ -32,7 +25,9 @@ class DriverCreationForm(UserCreationForm, LicenseNumberValidationForm):
         )
 
 
-class DriverLicenseUpdateForm(LicenseNumberValidationForm):
+class DriverLicenseUpdateForm(forms.ModelForm):
+    license_number = forms.CharField(validators=[validate_license_number])
+
     class Meta:
         model = Driver
         fields = ("license_number", )
